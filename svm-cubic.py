@@ -1,11 +1,7 @@
-# -------------------------------
-# analyze_features_svm3.py (final)
-# -------------------------------
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
@@ -13,14 +9,12 @@ from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.inspection import permutation_importance
 
-# -------------------------------
+
 # Load Data
-# -------------------------------
 file_path = "data/processed/train/all_train_features.csv"
 df = pd.read_csv(file_path, nrows=50000)
 
-# Identify features and labels
-# --- Select only F0 (Time-Domain) features ---
+# features and labels
 f0_keywords = ["_MAV", "_RMS", "_VAR", "_WL", "_ZC", "_SSC", "_WAMP", "_SSI"]
 features = [col for col in df.columns if any(k in col for k in f0_keywords)]
 X = df[features].values
@@ -29,17 +23,14 @@ y = df["Label"].values
 print(f"Loaded {df.shape[0]} samples with {len(features)} features.")
 print(f"Unique classes: {len(np.unique(y))}")
 
-# Standardize features
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 
-# Create output folder for plots
+# output folder
 os.makedirs("plots/SVM3", exist_ok=True)
 
-# -------------------------------
-# 1️⃣ Feature Correlation Heatmap
-# -------------------------------
+# Feature Correlation Heatmap
 corr = pd.DataFrame(X, columns=features).corr()
 
 plt.figure(figsize=(10, 8))
@@ -50,9 +41,7 @@ plt.savefig("plots/SVM3/feature_correlation_heatmap.png", dpi=300)
 plt.close()
 print("✅ Saved 'feature_correlation_heatmap.png'")
 
-# -------------------------------
-# 2️⃣ PCA Visualization
-# -------------------------------
+# PCA Visualization
 pca = PCA(n_components=3)
 X_pca = pca.fit_transform(X_scaled)
 print("Explained variance ratios:", pca.explained_variance_ratio_)
@@ -83,9 +72,7 @@ plt.savefig("plots/SVM3/pca_3d.png", dpi=300)
 plt.close()
 print("✅ Saved 'pca_2d.png' and 'pca_3d.png'")
 
-# -------------------------------
-# 3️⃣ SVM³ Classifier + Cross Validation
-# -------------------------------
+# SVM³ Classifier + Cross Validation
 model = SVC(
     kernel="poly",          # Cubic polynomial kernel
     degree=3,
@@ -104,9 +91,7 @@ print(f"Fold Accuracies: {[f'{score*100:.2f}%' for score in cv_scores]}")
 print(f"Mean Accuracy: {cv_scores.mean()*100:.2f}%")
 print(f"Std Deviation: {cv_scores.std()*100:.2f}%")
 
-# -------------------------------
-# 4️⃣ Confusion Matrix + Classification Report
-# -------------------------------
+
 # Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y, test_size=0.2, random_state=42, stratify=y
@@ -140,9 +125,7 @@ with open("plots/SVM3/classification_report.txt", "w") as f:
     f.write(report)
 print("✅ Saved 'classification_report.txt'")
 
-# -------------------------------
-# 5️⃣ Permutation Feature Importance
-# -------------------------------
+# Permutation Feature Importance
 perm_importance = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)
 importance_df = pd.DataFrame({
     "Feature": features,

@@ -1,7 +1,3 @@
-# ------------------------------------------------------------
-# process_emg_all_ema.py  
-# EMAHA-DB1 Full Feature Extraction — 250 ms window, 50% overlap
-# ------------------------------------------------------------
 import os
 import numpy as np
 import pandas as pd
@@ -9,9 +5,7 @@ from scipy.signal import welch
 from scipy.stats import skew, kurtosis
 from numpy.linalg import lstsq
 
-# ------------------------------------------------------------
-# Parameters (EMAHA-DB1 Configuration)
-# ------------------------------------------------------------
+# Parameters (EMAHA-DB1)
 FS = 2000.0             # Sampling frequency (Hz)
 WIN_SEC = 0.25          # Window size: 250 ms (per paper)
 WIN_LEN = int(WIN_SEC * FS)  # 250 ms × 2000 Hz = 500 samples
@@ -19,7 +13,7 @@ OVERLAP = 0.5           # 50% overlap
 STEP = int(WIN_LEN * (1 - OVERLAP))  # step size = 250 samples
 THR_FACTOR = 0.01       # Threshold for ZC/SSC/WAMP
 
-DATA_DIR = "data/train"             # Folder with *_filtered.csv
+DATA_DIR = "data/train"            
 OUTPUT_DIR = "data/processed/train"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -28,11 +22,9 @@ print(f"   - Sampling Rate: {FS} Hz")
 print(f"   - Window Length: {WIN_LEN} samples ({WIN_SEC*1000:.0f} ms)")
 print(f"   - Overlap: {OVERLAP*100:.0f}% → Step size: {STEP} samples\n")
 
-# ------------------------------------------------------------
-# Additional preprocessing
-# ------------------------------------------------------------
+
 def remove_baseline(x, window_size=1000):
-    """Remove slow DC drift using moving average baseline subtraction."""
+    """Removing slow DC drift using moving average baseline subtraction."""
     if len(x) < window_size:
         window_size = max(3, len(x) // 2)
     kernel = np.ones(window_size) / window_size
@@ -43,9 +35,8 @@ def channel_standardize(x):
     """Normalize per-segment to zero mean and unit variance."""
     return (x - np.mean(x)) / (np.std(x) + 1e-8)
 
-# ------------------------------------------------------------
+
 # Basic feature functions (F0–F1)
-# ------------------------------------------------------------
 def mean_absolute_value(x): return np.mean(np.abs(x))
 def root_mean_square(x): return np.sqrt(np.mean(x**2))
 def variance(x): return np.var(x)
@@ -86,9 +77,7 @@ def power_spectral_density(x, fs):
     f, Pxx = welch(x, fs=fs, nperseg=min(1024, len(x)))
     return f, Pxx
 
-# ------------------------------------------------------------
-# Advanced feature functions (F2–F9)
-# ------------------------------------------------------------
+# Advanced feature (F2–F9)
 def autoregressive_coeffs(x, order=4):
     N = len(x)
     if N <= order:
@@ -104,7 +93,7 @@ def spectral_band_powers(x, fs):
     sbp = []
     for low, high in bands:
         mask = (f >= low) & (f < high)
-        sbp.append(np.trapezoid(Pxx[mask], f[mask]))  # updated for NumPy 2.0
+        sbp.append(np.trapezoid(Pxx[mask], f[mask])) 
     return sbp
 
 def local_binary_pattern_feature(x):
@@ -136,9 +125,8 @@ def invariant_time_domain_descriptor(x):
             waveform_length(x_norm),
             root_mean_square(x_norm)]
 
-# ------------------------------------------------------------
-# Extract features for one channel (F0–F9)
-# ------------------------------------------------------------
+
+# Extracting features for one channel (F0–F9)
 def extract_features(x, fs, thr):
     feats = {}
 
@@ -194,9 +182,7 @@ def extract_features(x, fs, thr):
 
     return feats
 
-# ------------------------------------------------------------
-# Process a single file
-# ------------------------------------------------------------
+# Processing files
 def process_file(file_path, save=True):
     df = pd.read_csv(file_path)
     channels = [c for c in df.columns if c.startswith("Chan_")]
@@ -246,9 +232,8 @@ def process_file(file_path, save=True):
     print(f"Processed {file_path}: {len(feature_df)} windows extracted.")
     return feature_df
 
-# ------------------------------------------------------------
-# Process all filtered CSVs
-# ------------------------------------------------------------
+
+# Processing all filtered CSV
 all_features = []
 for fname in sorted(os.listdir(DATA_DIR)):
     if fname.endswith("_filtered.csv"):

@@ -15,22 +15,20 @@ INPUT_FOLDER = './EMG-dataset/TestCSV_C23/TestCSV_C23/'
 OUTPUT_DATA_FOLDER = 'data/test/'
 OUTPUT_PLOT_FOLDER = 'plots/test/'
 
-# Filter parameters from the research paper
+# Filter parameters
 FS = 2000.0           # Sampling frequency (Hz)
 LOW_PASS_CUTOFF = 500.0 # Low-pass cutoff frequency (Hz)
 NOTCH_FREQ = 50.0     # Notch filter frequency (Hz)
-FILTER_ORDER = 1      # Filter order (paper specifies "first-order")
+FILTER_ORDER = 1      # Filter order 
 
-# ----------------------------
-# 2. Create Output Directories
-# ----------------------------
+
+# Output Directories
 os.makedirs(OUTPUT_DATA_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_PLOT_FOLDER, exist_ok=True)
 print(f"Ensured directories exist:\n- {OUTPUT_DATA_FOLDER}\n- {OUTPUT_PLOT_FOLDER}")
 
-# ----------------------------
-# 3. Design Filters (do this once)
-# ----------------------------
+
+# 3. Design Filters 
 nyquist = 0.5 * FS
 # Low-pass filter design (Butterworth)
 b_low, a_low = butter(FILTER_ORDER, LOW_PASS_CUTOFF / nyquist, btype="low")
@@ -40,10 +38,8 @@ notch_quality = 30.0
 b_notch, a_notch = iirnotch(w0=NOTCH_FREQ / nyquist, Q=notch_quality)
 print("Filters designed.")
 
-# ----------------------------
-# 4. Find and Process All CSV Files
-# ----------------------------
-# Find all files ending in .csv in the input folder
+
+# Processing All CSV Files
 csv_files = glob.glob(os.path.join(INPUT_FOLDER, '*.csv'))
 print(f"Found {len(csv_files)} CSV file(s) to process: {csv_files}")
 
@@ -51,7 +47,6 @@ for file_path in csv_files:
     file_name = os.path.basename(file_path)
     base_name = os.path.splitext(file_name)[0]
     
-    # --- Skip already filtered files to avoid re-processing ---
     if base_name.endswith('_filtered'):
         print(f"\n--- Skipping already filtered file: {file_name} ---")
         continue
@@ -69,36 +64,29 @@ for file_path in csv_files:
     
     print(f"Found channels: {channels}")
     
-    # ----------------------------
-    # 5. Apply Filters
-    # ----------------------------
+    # Applying Filters
     filtered_df = df.copy()
     for chan in channels:
         signal_data = df[chan].values
-        # Apply 50Hz notch filter first (as per paper)
+        # Applying 50Hz notch filter
         signal_notched = filtfilt(b_notch, a_notch, signal_data)
-        # Apply 500Hz low-pass filter second
+        # Applying 500Hz low-pass filter
         filtered_signal = filtfilt(b_low, a_low, signal_notched)
         filtered_df[chan] = filtered_signal
     
-    # ----------------------------
-    # 6. Save Filtered Data
-    # ----------------------------
+    # Save Filtered Data
     output_data_path = os.path.join(OUTPUT_DATA_FOLDER, f"{base_name}_filtered.csv")
     filtered_df.to_csv(output_data_path, index=False)
     print(f"Saved filtered data to: {output_data_path}")
 
-    # ----------------------------
-    # 7. Generate Multi-Channel Plot
-    # ----------------------------
+    # Generating Multi-Channel Plot
     num_channels = len(channels)
-    # Create a plot with N rows (one for each channel) and 2 columns (Time, PSD)
+    # Plot with N rows (one for each channel) and 2 columns (Time, PSD)
     fig, axes = plt.subplots(nrows=num_channels, ncols=2, figsize=(18, 5 * num_channels), squeeze=False)
     
     t = np.arange(len(df)) / FS
     two_sec = int(2 * FS) # Number of samples for 2 seconds
     
-    # Ensure we don't try to plot more than we have
     if two_sec > len(t):
         two_sec = len(t)
         

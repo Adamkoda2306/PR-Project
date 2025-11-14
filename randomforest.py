@@ -1,24 +1,18 @@
-# -------------------------------
-# analyze_features_random_forest.py
-# -------------------------------
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.ensemble import RandomForestClassifier
 
-# -------------------------------
 # Load Data
-# -------------------------------
 file_path = "data/processed/train/all_train_features.csv"
 df = pd.read_csv(file_path, nrows=50000)
 
-# Identify features and labels
+# features and labels
 f0_keywords = ["_MAV", "_RMS", "_VAR", "_WL", "_ZC", "_SSC", "_WAMP", "_SSI"]
 features = [col for col in df.columns if any(k in col for k in f0_keywords)]
 X = df[features].values
@@ -27,18 +21,15 @@ y = y - y.min()
 
 print(f"Loaded {df.shape[0]} samples with {len(features)} features.")
 
-# Standardize
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 
-# Create output folder for plots
+# output folder
 os.makedirs("plots/RF", exist_ok=True)
 
 
-# -------------------------------
-# 1️⃣ Correlation Heatmap
-# -------------------------------
+# Correlation Heatmap
 corr = pd.DataFrame(X, columns=features).corr()
 
 plt.figure(figsize=(10, 8))
@@ -49,9 +40,7 @@ plt.savefig("plots/RF/feature_correlation_heatmap.png", dpi=300)
 plt.close()
 print("✅ Saved 'feature_correlation_heatmap.png'")
 
-# -------------------------------
-# 2️⃣ PCA Visualization
-# -------------------------------
+# PCA Visualization
 pca = PCA(n_components=3)
 X_pca = pca.fit_transform(X_scaled)
 print("Explained variance ratios:", pca.explained_variance_ratio_)
@@ -83,9 +72,7 @@ plt.savefig("plots/RF/pca_3d.png", dpi=300)
 plt.close()
 print("✅ Saved 'pca_2d.png' and 'pca_3d.png'")
 
-# -------------------------------
-# 3️⃣ Random Forest Classifier + CV
-# -------------------------------
+# Random Forest Classifier + CV
 model = RandomForestClassifier(
     n_estimators=300,
     max_depth=None,
@@ -105,9 +92,7 @@ print(f"Fold Accuracies: {[f'{score*100:.2f}%' for score in cv_scores]}")
 print(f"Mean Accuracy: {cv_scores.mean()*100:.2f}%")
 print(f"Std Deviation: {cv_scores.std()*100:.2f}%")
 
-# -------------------------------
-# 4️⃣ Confusion Matrix + Report
-# -------------------------------
+# Confusion Matrix + Report
 X_train, X_test, y_train, y_test = train_test_split(
     X_scaled, y, test_size=0.2, random_state=42, stratify=y
 )
@@ -141,9 +126,7 @@ with open("plots/RF/classification_report.txt", "w") as f:
     f.write(report)
 print("✅ Saved 'classification_report.txt'")
 
-# -------------------------------
-# 5️⃣ Feature Importance (Random Forest)
-# -------------------------------
+# Feature Importance (Random Forest)
 importances = model.feature_importances_
 sorted_idx = np.argsort(importances)
 
