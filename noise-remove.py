@@ -5,8 +5,8 @@ from scipy.signal import butter, filtfilt, iirnotch, welch
 import os
 import glob
 
-# ----------------------------
-# 1. Define Paths and Parameters
+
+# Paths
 # ----------------------------
 # INPUT_FOLDER = './EMG-dataset/TrainCSV_C23/TrainCSV_C23/' # Look for CSVs in the current directory
 # OUTPUT_DATA_FOLDER = 'data/train/'
@@ -117,18 +117,18 @@ for file_path in csv_files:
         ax_psd.legend()
         ax_psd.grid(which='both', linestyle='--', alpha=0.6)
 
-    # Set x-axis labels only on the bottom-most plots
+    # Set x-axis labels
     axes[-1, 0].set_xlabel("Time [s]")
     axes[-1, 1].set_xlabel("Frequency [Hz]")
     
-    # Add a main title for the whole figure
+    # Adding title for the figure
     fig.suptitle(f"Filtering Comparison for {file_name}", fontsize=20, y=1.03)
     
     # Adjust layout and save
     plt.tight_layout()
     output_plot_path = os.path.join(OUTPUT_PLOT_FOLDER, f"{base_name}_comparison_plot.png")
     plt.savefig(output_plot_path, dpi=150, bbox_inches='tight')
-    plt.close(fig) # Close the figure to save memory
+    plt.close(fig)
     
     print(f"Saved multi-channel plot to: {output_plot_path}")
 
