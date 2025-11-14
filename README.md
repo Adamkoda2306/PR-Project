@@ -87,9 +87,10 @@ INSTALLATION GUIDE
 ============================================================
 
 1. Clone the repository:
-
+```bash
 git clone https://github.com/Adamkoda2306/PR-Project
 cd PR-Project
+```
 
 2. Create a virtual environment:
 
