@@ -94,16 +94,22 @@ cd PR-Project
 2. Create a virtual environment:
 
 Windows:
+```bash
 python -m venv env
 ./env/Scripts/Activate
+```
 
 Mac/Linux:
+```bash
 python3 -m venv env
 source env/bin/activate
+```
 
 3. Install required packages:
 
+```bash
 pip install -r requirements.txt
+```
 
 
 
